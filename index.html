@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Zamów OG Skun</title>
+  <title>Zamów Legalny Skun</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -84,7 +84,11 @@
       Wpisz dane powyżej, aby zobaczyć podsumowanie.
     </div>
 
+    <!-- Ukryte dane do przesłania w mailu -->
     <input type="hidden" name="order_id" value="ZAM-800045" />
+    <input type="hidden" name="price_per_gram" id="price_per_gram" />
+    <input type="hidden" name="shipping_cost" id="shipping_cost" />
+    <input type="hidden" name="total_cost" id="total_cost" />
 
     <button type="submit">Wyślij zamówienie</button>
   </form>
@@ -101,7 +105,10 @@
     const shippingSelect = document.getElementById('shipping');
     const summaryBox = document.getElementById('priceSummary');
     const paymentInfo = document.getElementById('paymentInfo');
-    const orderId = "ZAM-800045";
+
+    const pricePerGramField = document.getElementById('price_per_gram');
+    const shippingCostField = document.getElementById('shipping_cost');
+    const totalCostField = document.getElementById('total_cost');
 
     function updateSummary() {
       const grams = parseInt(gramsInput.value, 10);
@@ -132,7 +139,12 @@
         <strong>Do zapłaty: ${total.toFixed(2)} zł</strong>
       `;
 
-      document.querySelector('#paymentInfo').style.display = "block";
+      paymentInfo.style.display = "block";
+
+      // Uzupełnianie ukrytych pól do wysyłki na email
+      pricePerGramField.value = pricePerGram + " zł";
+      shippingCostField.value = shippingCost.toFixed(2) + " zł";
+      totalCostField.value = total.toFixed(2) + " zł";
     }
 
     gramsInput.addEventListener('input', updateSummary);
