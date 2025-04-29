@@ -54,6 +54,10 @@
       font-size: 0.95rem;
       color: #ccc;
     }
+
+    a {
+      color: #00ffcc;
+    }
   </style>
 </head>
 <body>
@@ -94,10 +98,28 @@
   </form>
 
   <div class="info" id="paymentInfo" style="display:none;">
-    <h3>Płatność BLIK</h3>
-    <p>Prosimy o wysłanie płatności BLIK na numer: <strong>666 354 502</strong></p>
-    <p>W tytule przelewu wpisz: <strong>ZAM-800045</strong></p>
-    <p>Obecnie obsługujemy wyłącznie BLIK. W przyszłości zostaną dodane inne metody płatności — sporo środków zainwestowano w serwery utrzymujące stronę. Dzięki za zrozumienie!</p>
+    <h3>Płatność BLIK i proces zamówienia</h3>
+
+    <p>Aktualnie obsługujemy płatności wyłącznie poprzez <strong>BLIK</strong>.  
+    Metoda ta pozwala zachować prostotę i bezpieczeństwo.  
+    W przyszłości planujemy wdrożenie nowych opcji płatności — rozwój trwa!</p>
+
+    <p>
+      <strong>Jak przebiega zamówienie:</strong><br><br>
+      <strong>1️⃣ Zamawiasz</strong> — wypełniasz formularz, podajesz email i dodajesz mnie na Discordzie  
+      <br><br>
+      <strong>2️⃣ Finalizacja</strong> — na Discordzie podajesz mi <strong>kod BLIK</strong> oraz dane do wysyłki  
+      (np. paczkomat InPost lub adres DHL). Wysyłasz jakby "do siebie" — w trosce o <strong>wspólne bezpieczeństwo</strong>  
+      <br><br>
+      <strong>3️⃣ Wysyłka</strong> — do 24h od potwierdzenia przelewu nadaję paczkę. Czekasz na produkt  
+      <br><br>
+      <strong>4️⃣ Wsparcie</strong> — obsługa klienta dostępna codziennie w godzinach: <strong>8:00–20:00</strong>
+    </p>
+
+    <p>
+      W razie pytań, dołącz do Discorda:<br>
+      <a href="https://discord.gg/sCdeD8sR" target="_blank"><strong>Wejdź na Discord</strong></a>
+    </p>
   </div>
 
   <script>
@@ -141,7 +163,7 @@
 
       paymentInfo.style.display = "block";
 
-      // Uzupełnianie ukrytych pól do wysyłki na email
+      // Uzupełnianie ukrytych pól do maila
       pricePerGramField.value = pricePerGram + " zł";
       shippingCostField.value = shippingCost.toFixed(2) + " zł";
       totalCostField.value = total.toFixed(2) + " zł";
