@@ -3,148 +3,141 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OG Skun - Oferta</title>
+  <title>Zamów OG Skun</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
       background-color: #121212;
-      color: #f1f1f1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    header {
-      background-color: #1f1f1f;
+      color: #fff;
       padding: 2rem;
-      text-align: center;
-      width: 100%;
+      max-width: 600px;
+      margin: auto;
     }
 
     h1 {
-      margin: 0;
       color: #00ff99;
     }
 
-    .discord-button {
-      margin: 1rem;
-      padding: 1rem 2rem;
-      background-color: #5865F2;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 1.1rem;
-      transition: background-color 0.3s;
-    }
-
-    .discord-button:hover {
-      background-color: #4752c4;
-    }
-
-    .pricing {
-      margin: 2rem auto;
-      max-width: 600px;
-      background-color: #1e1e1e;
-      padding: 2rem;
-      border-radius: 10px;
-    }
-
-    .pricing h2 {
-      color: #00ffcc;
-    }
-
-    .pricing ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .pricing li {
-      margin: 0.5rem 0;
-      font-size: 1.1rem;
-    }
-
-    form {
-      margin-top: 2rem;
-      background-color: #1e1e1e;
-      padding: 2rem;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 500px;
-    }
-
-    input, textarea, select {
+    label, input, select, textarea {
+      display: block;
       width: 100%;
+      margin-top: 1rem;
+    }
+
+    input, select, textarea {
       padding: 0.8rem;
-      margin-bottom: 1rem;
+      background-color: #1e1e1e;
+      color: #fff;
       border: none;
       border-radius: 5px;
-      background-color: #2b2b2b;
-      color: #fff;
     }
 
     button {
-      padding: 0.8rem 2rem;
+      margin-top: 1.5rem;
+      padding: 1rem;
       background-color: #00cc88;
       color: white;
       border: none;
       border-radius: 5px;
-      font-size: 1rem;
       cursor: pointer;
     }
 
-    button:hover {
-      background-color: #00aa77;
+    .summary {
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: #1e1e1e;
+      border-left: 4px solid #00cc88;
     }
 
-    .info-box {
-      background-color: #2b2b2b;
-      padding: 1rem;
-      border-left: 4px solid #00cc88;
-      margin-bottom: 1rem;
+    .info {
+      margin-top: 2rem;
       font-size: 0.95rem;
+      color: #ccc;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Legalny Skun - Oferta</h1>
-    <a class="discord-button" href="https://discord.gg/sCdeD8sR" target="_blank">Dołącz na Discord</a>
-  </header>
+  <h1>Zamów Legalny Skun</h1>
 
-  <section class="pricing">
-    <h2>Cennik</h2>
-    <ul>
-      <li>1-4g — <strong>50 zł</strong> / gram</li>
-      <li>5-9g — <strong>40 zł</strong> / gram</li>
-      <li>10-19g — <strong>40 zł</strong> / gram</li>
-      <li>20g — <strong>35 zł</strong> / gram</li>
-    </ul>
-  </section>
+  <form action="https://getform.io/f/akkyqmqa" method="POST" id="orderForm">
+    <label for="discord">Nick z Discorda:</label>
+    <input type="text" name="discord" id="discord" placeholder="np. twojanick#1234" required />
 
-  <form action="https://getform.io/f/akkyqmqa" method="POST">
-    <h2>Zamówienie / Zapytanie</h2>
+    <label for="email">Email:</label>
+    <input type="email" name="email" id="email" required />
 
-    <div class="info-box">
-      Podaj swój nick z Discorda, np. <strong>twojanick#1234</strong>, abyśmy mogli się z Tobą skontaktować.
-    </div>
+    <label for="grams">Ilość gramów:</label>
+    <input type="number" name="grams" id="grams" min="1" max="20" required />
 
-    <input type="text" name="discord" placeholder="Nick z Discorda (np. twojanick#1234)" required>
-    <input type="email" name="email" placeholder="Twój email" required>
-
-    <select name="produkt" required>
-      <option value="">Wybierz ilość</option>
-      <option value="1-4g">1-4g — 50 zł / g</option>
-      <option value="5-9g">5-9g — 40 zł / g</option>
-      <option value="10-19g">10-19g — 40 zł / g</option>
-      <option value="20g">20g — 35 zł / g</option>
+    <label for="shipping">Wybierz sposób dostawy:</label>
+    <select name="shipping" id="shipping" required>
+      <option value="">-- wybierz --</option>
+      <option value="inpost">InPost (16.99 zł)</option>
+      <option value="dhl">DHL (9.90 zł)</option>
     </select>
 
-    <textarea name="message" placeholder="Dodatkowe informacje" rows="4"></textarea>
-    <button type="submit">Wyślij</button>
+    <label for="address">Adres dostawy / Paczkomat:</label>
+    <textarea name="address" id="address" placeholder="np. InPost WAW01A, Warszawa" required></textarea>
+
+    <div class="summary" id="priceSummary">
+      Wpisz dane powyżej, aby zobaczyć podsumowanie.
+    </div>
+
+    <input type="hidden" name="order_id" value="ZAM-800045" />
+
+    <button type="submit">Wyślij zamówienie</button>
   </form>
+
+  <div class="info" id="paymentInfo" style="display:none;">
+    <h3>Płatność BLIK</h3>
+    <p>Prosimy o wysłanie płatności BLIK na numer: <strong>666 354 502</strong></p>
+    <p>W tytule przelewu wpisz: <strong>ZAM-800045</strong></p>
+    <p>Obecnie obsługujemy wyłącznie BLIK. W przyszłości zostaną dodane inne metody płatności — sporo środków zainwestowano w serwery utrzymujące stronę. Dzięki za zrozumienie!</p>
+  </div>
+
+  <script>
+    const gramsInput = document.getElementById('grams');
+    const shippingSelect = document.getElementById('shipping');
+    const summaryBox = document.getElementById('priceSummary');
+    const paymentInfo = document.getElementById('paymentInfo');
+    const orderId = "ZAM-800045";
+
+    function updateSummary() {
+      const grams = parseInt(gramsInput.value, 10);
+      const shipping = shippingSelect.value;
+
+      if (!grams || !shipping || grams <= 0 || grams > 20) {
+        summaryBox.textContent = "Wpisz poprawną ilość gramów i wybierz sposób dostawy.";
+        paymentInfo.style.display = "none";
+        return;
+      }
+
+      let pricePerGram = 0;
+      let shippingCost = 0;
+
+      if (shipping === "inpost") {
+        shippingCost = 16.99;
+        pricePerGram = grams < 20 ? 33 : 30;
+      } else if (shipping === "dhl") {
+        shippingCost = 9.90;
+        pricePerGram = grams < 20 ? 40 : 35;
+      }
+
+      const total = grams * pricePerGram + shippingCost;
+
+      summaryBox.innerHTML = `
+        Cena za gram: <strong>${pricePerGram} zł</strong><br>
+        Koszt wysyłki: <strong>${shippingCost.toFixed(2)} zł</strong><br>
+        <strong>Do zapłaty: ${total.toFixed(2)} zł</strong>
+      `;
+
+      document.querySelector('#paymentInfo').style.display = "block";
+    }
+
+    gramsInput.addEventListener('input', updateSummary);
+    shippingSelect.addEventListener('change', updateSummary);
+  </script>
 
 </body>
 </html>
