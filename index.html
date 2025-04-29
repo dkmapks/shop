@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OG Skun - Oferta</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #f1f1f1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      background-color: #1f1f1f;
+      padding: 2rem;
+      text-align: center;
+      width: 100%;
+    }
+
+    h1 {
+      margin: 0;
+      color: #00ff99;
+    }
+
+    .discord-button {
+      margin: 1rem;
+      padding: 1rem 2rem;
+      background-color: #5865F2;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: background-color 0.3s;
+    }
+
+    .discord-button:hover {
+      background-color: #4752c4;
+    }
+
+    .pricing {
+      margin: 2rem auto;
+      max-width: 600px;
+      background-color: #1e1e1e;
+      padding: 2rem;
+      border-radius: 10px;
+    }
+
+    .pricing h2 {
+      color: #00ffcc;
+    }
+
+    .pricing ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .pricing li {
+      margin: 0.5rem 0;
+      font-size: 1.1rem;
+    }
+
+    form {
+      margin-top: 2rem;
+      background-color: #1e1e1e;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #2b2b2b;
+      color: #fff;
+    }
+
+    button {
+      padding: 0.8rem 2rem;
+      background-color: #00cc88;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #00aa77;
+    }
+
+    .info-box {
+      background-color: #2b2b2b;
+      padding: 1rem;
+      border-left: 4px solid #00cc88;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Legalny Skun - Oferta</h1>
+    <a class="discord-button" href="https://discord.gg/sCdeD8sR" target="_blank">Dołącz na Discord</a>
+  </header>
+
+  <section class="pricing">
+    <h2>Cennik</h2>
+    <ul>
+      <li>1 gram - 50 zł</li>
+      <li>5 gram - 200 zł</li>
+      <li>10 gram - 400 zł</li>
+      <li>20 gram - 700 zł</li>
+    </ul>
+  </section>
+
+  <form action="https://getform.io/f/akkyqmqa" method="POST">
+    <h2>Zamówienie / Zapytanie</h2>
+
+    <div class="info-box">
+      Podaj swój nick z Discorda, np. <strong>twojanick#1234</strong>, abyśmy mogli się z Tobą skontaktować.
+    </div>
+
+    <input type="text" name="discord" placeholder="Nick z Discorda (np. twojanick#1234)" required>
+    <input type="email" name="email" placeholder="Twój email" required>
+
+    <select name="produkt" required>
+      <option value="">Wybierz produkt</option>
+      <option value="1g">1 gram - 50 zł</option>
+      <option value="5g">5 gram - 200 zł</option>
+      <option value="10g">10 gram - 400 zł</option>
+      <option value="20g">20 gram - 700 zł</option>
+    </select>
+
+    <textarea name="message" placeholder="Dodatkowe informacje" rows="4"></textarea>
+    <button type="submit">Wyślij</button>
+  </form>
+
+</body>
+</html>
