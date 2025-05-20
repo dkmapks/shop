@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Kalkulator Penisa</title>
+  <meta charset="UTF-8" />
+  <title>Kalkulator długości penisa z porównaniem</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 400px;
+      max-width: 450px;
       margin: 30px auto;
       padding: 20px;
       background: #f9f9f9;
@@ -23,39 +23,51 @@
     h1, h3 {
       text-align: center;
     }
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      background: #e1f5fe;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.1em;
+    }
   </style>
 </head>
 <body>
   <h1>Kalkulator długości penisa</h1>
 
   <label>Wiek (lata):</label>
-  <input type="number" id="age" placeholder="np. 17">
+  <input type="number" id="age" placeholder="np. 20" min="10" max="100" />
 
   <label>Wzrost (cm):</label>
-  <input type="number" id="height" placeholder="np. 175">
+  <input type="number" id="height" placeholder="np. 190" min="100" max="250" />
   
   <label>Waga (kg):</label>
-  <input type="number" id="weight" placeholder="np. 70">
+  <input type="number" id="weight" placeholder="np. 60" min="30" max="200" />
 
-  <button onclick="calculate()">Oblicz</button>
+  <label>Twoja faktyczna długość penisa (cm):</label>
+  <input type="number" id="actualLength" placeholder="np. 20" min="5" max="30" />
 
-  <h3 id="result"></h3>
+  <button onclick="calculate()">Oblicz i porównaj</button>
+
+  <div class="result" id="result"></div>
 
   <script>
     function calculate() {
       const age = parseInt(document.getElementById('age').value);
       const height = parseFloat(document.getElementById('height').value);
       const weight = parseFloat(document.getElementById('weight').value);
+      const actualLength = parseFloat(document.getElementById('actualLength').value);
 
-      if (!age || !height || !weight || age < 10 || age > 100) {
-        document.getElementById('result').innerText = "Podaj poprawne dane (wiek 10–100 lat).";
+      if (!age || !height || !weight || !actualLength || age < 10 || age > 100 || height < 100 || height > 250 || weight < 30 || weight > 200 || actualLength < 5 || actualLength > 30) {
+        document.getElementById('result').innerHTML = "<b>Proszę podać poprawne wartości we wszystkich polach.</b>";
         return;
       }
 
-      // Bazowa długość zależna od wzrostu i wagi
+      // Bazowa długość
       let length = 10 + (height - 150) * 0.1 - (weight - 60) * 0.05;
 
-      // Korekta zależna od wieku (dojrzewanie)
+      // Korekta wieku
       if (age < 12) {
         length *= 0.7;
       } else if (age <= 14) {
@@ -70,12 +82,24 @@
         length *= 1.0;
       }
 
-      // Ograniczenia
       if (length < 7) length = 7;
       if (length > 20) length = 20;
 
-      document.getElementById('result').innerText =
-        `Szacowana długość penisa w erekcji: ${length.toFixed(1)} cm`;
+      let diff = actualLength - length;
+      let comparison;
+
+      if (diff > 2) {
+        comparison = "Twoja długość jest powyżej przeciętnej.";
+      } else if (diff < -2) {
+        comparison = "Twoja długość jest poniżej przeciętnej.";
+      } else {
+        comparison = "Twoja długość jest w normie (bliska średniej).";
+      }
+
+      document.getElementById('result').innerHTML =
+        `<b>Szacowana długość penisa (według wzrostu, wagi i wieku):</b> ${length.toFixed(1)} cm<br>` +
+        `<b>Twoja faktyczna długość:</b> ${actualLength.toFixed(1)} cm<br><br>` +
+        `<b>Porównanie:</b> ${comparison}`;
     }
   </script>
 </body>
