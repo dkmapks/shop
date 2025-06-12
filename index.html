@@ -1,330 +1,106 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Fizyka - kalkulator wzorów</title>
-<link rel="manifest" href="manifest.json" />
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 480px;
-    margin: auto;
-    padding: 1rem;
-    background: #f5f5f5;
-    color: #222;
-  }
-  h1 {
-    text-align: center;
-    color: #1976d2;
-  }
-  label {
-    display: block;
-    margin-top: 1rem;
-    font-weight: bold;
-  }
-  select, input {
-    width: 100%;
-    padding: 0.5rem;
-    margin-top: 0.25rem;
-    box-sizing: border-box;
-  }
-  button {
-    margin-top: 1.5rem;
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #1976d2;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  button:hover {
-    background-color: #1565c0;
-  }
-  #result {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: #e3f2fd;
-    border-radius: 5px;
-    font-weight: bold;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BranzoCoin Wallet</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; background: #111; color: #eee; }
+    h1 { text-align: center; }
+    .box { border: 1px solid #444; padding: 15px; margin: 15px 0; border-radius: 10px; background: #222; }
+    input, button, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; }
+    button { background: #00cc88; color: #000; font-weight: bold; cursor: pointer; }
+    #modMenu { display: none; }
+  </style>
 </head>
 <body>
 
-<h1>Kalkulator wzorów fizyki</h1>
+<h1>💰 BranzoCoin Wallet</h1>
+<div class="box">
+  <p><strong>Kurs BranzoCoin:</strong> <span id="kurs">0.01</span> zł / BRZ</p>
+  <p><strong>Twoje saldo:</strong> <span id="saldo">0</span> BRZ (~<span id="zl">0.00</span> zł)</p>
+</div>
 
-<label for="category">Wybierz dział:</label>
-<select id="category" required>
-  <option value="" disabled selected>-- Wybierz dział --</option>
-  <option value="ruch_prostolinijny">Ruch prostoliniowy</option>
-  <option value="ruch_jednostajnie_przyspieszony">Ruch jednostajnie przyspieszony</option>
-  <option value="sila_i_ruch">Siła i ruch</option>
-  <option value="cisnienie">Ciśnienie</option>
-  <option value="praca">Praca</option>
-  <option value="energia">Energia</option>
-  <option value="cieplo_i_temperatura">Ciepło i temperatura</option>
-  <option value="predkosc_fali">Prędkość fali</option>
-</select>
+<div class="box">
+  <h3>📥 Wpłata</h3>
+  <p>Przelej pieniądze na konto:<br><b>12 3456 7890 1234 5678 9012 3456</b></p>
+  <p>Po przelewie, wpisz kwotę:</p>
+  <input type="number" id="wplataKwota" placeholder="Kwota zł" />
+  <button onclick="dodajWplate()">Zatwierdź wpłatę</button>
+</div>
 
-<label for="formula">Wybierz wzór do obliczenia:</label>
-<select id="formula" disabled required>
-  <option value="" disabled selected>-- Wybierz wzór --</option>
-</select>
+<div class="box">
+  <h3>📤 Wypłata</h3>
+  <textarea id="wplataDane" placeholder="Numer konta / dane do przelewu"></textarea>
+  <input type="number" id="wypKwota" placeholder="Kwota BRZ do wypłaty" />
+  <button onclick="wypisz()">Zatwierdź wypłatę</button>
+</div>
 
-<div id="inputs"></div>
-
-<button id="calculateBtn" disabled>Oblicz</button>
-
-<div id="result"></div>
+<div class="box">
+  <h3>🔐 Mod Menu</h3>
+  <input type="text" id="kod" placeholder="Kod dostępu" />
+  <button onclick="odblokujModMenu()">Otwórz Mod Menu</button>
+  <div id="modMenu">
+    <input type="number" id="nowyKurs" placeholder="Nowy kurs (zł za 1 BRZ)" />
+    <button onclick="zmienKurs()">Zmień kurs</button>
+  </div>
+</div>
 
 <script>
-// Definicje wzorów i parametrów
+  // Inicjalizacja
+  let kurs = parseFloat(localStorage.getItem("kurs")) || 0.01;
+  let saldo = parseFloat(localStorage.getItem("saldo")) || 0;
 
-const formulas = {
-  ruch_prostolinijny: {
-    s: {
-      name: "Droga (s)",
-      inputs: ["v", "t"],
-      formula: (v,t) => v*t,
-      description: "s = v × t"
-    },
-    v: {
-      name: "Prędkość (v)",
-      inputs: ["s", "t"],
-      formula: (s,t) => s/t,
-      description: "v = s / t"
-    },
-    t: {
-      name: "Czas (t)",
-      inputs: ["s", "v"],
-      formula: (s,v) => s/v,
-      description: "t = s / v"
-    }
-  },
-  ruch_jednostajnie_przyspieszony: {
-    s: {
-      name: "Droga (s)",
-      inputs: ["v0", "a", "t"],
-      formula: (v0,a,t) => v0*t + 0.5*a*t*t,
-      description: "s = v₀ t + ½ a t²"
-    },
-    v: {
-      name: "Prędkość końcowa (v)",
-      inputs: ["v0", "a", "t"],
-      formula: (v0,a,t) => v0 + a*t,
-      description: "v = v₀ + a t"
-    },
-    v2: {
-      name: "Prędkość końcowa (inna forma)",
-      inputs: ["v0", "a", "s"],
-      formula: (v0,a,s) => Math.sqrt(v0*v0 + 2*a*s),
-      description: "v² = v₀² + 2 a s"
-    },
-    a: {
-      name: "Przyspieszenie (a)",
-      inputs: ["v", "v0", "t"],
-      formula: (v,v0,t) => (v - v0)/t,
-      description: "a = (v - v₀) / t"
-    }
-  },
-  sila_i_ruch: {
-    F: {
-      name: "Siła (F)",
-      inputs: ["m", "a"],
-      formula: (m,a) => m*a,
-      description: "F = m × a"
-    },
-    a: {
-      name: "Przyspieszenie (a)",
-      inputs: ["F", "m"],
-      formula: (F,m) => F/m,
-      description: "a = F / m"
-    },
-    m: {
-      name: "Masa (m)",
-      inputs: ["F", "a"],
-      formula: (F,a) => F/a,
-      description: "m = F / a"
-    }
-  },
-  cisnienie: {
-    p: {
-      name: "Ciśnienie (p)",
-      inputs: ["F", "S"],
-      formula: (F,S) => F/S,
-      description: "p = F / S"
-    },
-    F: {
-      name: "Siła (F)",
-      inputs: ["p", "S"],
-      formula: (p,S) => p*S,
-      description: "F = p × S"
-    },
-    S: {
-      name: "Pole powierzchni (S)",
-      inputs: ["F", "p"],
-      formula: (F,p) => F/p,
-      description: "S = F / p"
-    }
-  },
-  praca: {
-    W: {
-      name: "Praca (W)",
-      inputs: ["F", "s"],
-      formula: (F,s) => F*s,
-      description: "W = F × s"
-    },
-    F: {
-      name: "Siła (F)",
-      inputs: ["W", "s"],
-      formula: (W,s) => W/s,
-      description: "F = W / s"
-    },
-    s: {
-      name: "Droga (s)",
-      inputs: ["W", "F"],
-      formula: (W,F) => W/F,
-      description: "s = W / F"
-    }
-  },
-  energia: {
-    Ek: {
-      name: "Energia kinetyczna (Ek)",
-      inputs: ["m", "v"],
-      formula: (m,v) => 0.5*m*v*v,
-      description: "Ek = ½ m v²"
-    },
-    Ep: {
-      name: "Energia potencjalna (Ep)",
-      inputs: ["m", "h"],
-      formula: (m,h) => m*9.81*h,
-      description: "Ep = m g h, g = 9,81 m/s²"
-    },
-    E: {
-      name: "Energia całkowita (E)",
-      inputs: ["Ek", "Ep"],
-      formula: (Ek,Ep) => Ek + Ep,
-      description: "E = Ek + Ep"
-    }
-  },
-  cieplo_i_temperatura: {
-    Q: {
-      name: "Ciepło (Q)",
-      inputs: ["m", "c", "deltaT"],
-      formula: (m,c,deltaT) => m*c*deltaT,
-      description: "Q = m c ΔT"
-    }
-  },
-  predkosc_fali: {
-    v: {
-      name: "Prędkość fali (v)",
-      inputs: ["f", "lambda"],
-      formula: (f,lambda) => f*lambda,
-      description: "v = f λ"
-    },
-    v2: {
-      name: "Prędkość fali (v)",
-      inputs: ["s", "t"],
-      formula: (s,t) => s/t,
-      description: "v = s / t"
+  function aktualizujWidok() {
+    document.getElementById("kurs").textContent = kurs.toFixed(2);
+    document.getElementById("saldo").textContent = saldo.toFixed(0);
+    document.getElementById("zl").textContent = (saldo * kurs).toFixed(2);
+    localStorage.setItem("kurs", kurs);
+    localStorage.setItem("saldo", saldo);
+  }
+
+  function dodajWplate() {
+    let kwota = parseFloat(document.getElementById("wplataKwota").value);
+    if (kwota > 0) {
+      let ileBRZ = kwota / kurs;
+      saldo += ileBRZ;
+      alert(`Dodano ${ileBRZ.toFixed(0)} BRZ do konta`);
+      aktualizujWidok();
     }
   }
-};
 
-const categorySelect = document.getElementById("category");
-const formulaSelect = document.getElementById("formula");
-const inputsDiv = document.getElementById("inputs");
-const calculateBtn = document.getElementById("calculateBtn");
-const resultDiv = document.getElementById("result");
-
-// Po wybraniu kategorii ładujemy wzory
-categorySelect.addEventListener("change", () => {
-  const category = categorySelect.value;
-  formulaSelect.innerHTML = '<option value="" disabled selected>-- Wybierz wzór --</option>';
-  inputsDiv.innerHTML = "";
-  resultDiv.textContent = "";
-  calculateBtn.disabled = true;
-
-  if (category && formulas[category]) {
-    for (const key in formulas[category]) {
-      const option = document.createElement("option");
-      option.value = key;
-      option.textContent = formulas[category][key].name + " (" + formulas[category][key].description + ")";
-      formulaSelect.appendChild(option);
+  function wypisz() {
+    let dane = document.getElementById("wplataDane").value;
+    let kwota = parseFloat(document.getElementById("wypKwota").value);
+    if (kwota > 0 && kwota <= saldo && dane.length > 5) {
+      saldo -= kwota;
+      alert(`Zlecono wypłatę ${kwota.toFixed(0)} BRZ.\nDane:\n${dane}`);
+      aktualizujWidok();
+    } else {
+      alert("Błąd: za mało środków lub brak danych.");
     }
-    formulaSelect.disabled = false;
-  } else {
-    formulaSelect.disabled = true;
   }
-});
 
-// Po wybraniu wzoru tworzymy pola do wpisania danych
-formulaSelect.addEventListener("change", () => {
-  inputsDiv.innerHTML = "";
-  resultDiv.textContent = "";
-  calculateBtn.disabled = false;
-
-  const category = categorySelect.value;
-  const formulaKey = formulaSelect.value;
-  if (!category || !formulaKey) return;
-
-  const formula = formulas[category][formulaKey];
-  formula.inputs.forEach(param => {
-    const label = document.createElement("label");
-    label.htmlFor = param;
-    label.textContent = `Podaj ${param}:`;
-    const input = document.createElement("input");
-    input.type = "number";
-    input.id = param;
-    input.required = true;
-    inputsDiv.appendChild(label);
-    inputsDiv.appendChild(input);
-  });
-});
-
-// Obliczenia po kliknięciu
-calculateBtn.addEventListener("click", () => {
-  const category = categorySelect.value;
-  const formulaKey = formulaSelect.value;
-  if (!category || !formulaKey) return;
-
-  const formula = formulas[category][formulaKey];
-  const values = [];
-
-  // Pobierz wartości z pól
-  let valid = true;
-  for (const param of formula.inputs) {
-    const val = parseFloat(document.getElementById(param).value);
-    if (isNaN(val)) {
-      valid = false;
-      alert(`Podaj poprawną wartość dla ${param}`);
-      break;
+  function odblokujModMenu() {
+    const kod = document.getElementById("kod").value;
+    if (kod === "74320101") {
+      document.getElementById("modMenu").style.display = "block";
+    } else {
+      alert("Niepoprawny kod");
     }
-    values.push(val);
   }
-  if (!valid) return;
 
-  // Oblicz wynik
-  try {
-    const wynik = formula.formula(...values);
-    resultDiv.textContent = `Wynik: ${wynik.toFixed(4)}`;
-  } catch (e) {
-    resultDiv.textContent = "Błąd w obliczeniach.";
+  function zmienKurs() {
+    let nowy = parseFloat(document.getElementById("nowyKurs").value);
+    if (nowy > 0) {
+      kurs = nowy;
+      aktualizujWidok();
+      alert("Kurs zmieniony");
+    }
   }
-});
 
-// Rejestracja service workera (dla offline)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').then(reg => {
-      console.log('Service Worker zarejestrowany', reg);
-    }).catch(err => {
-      console.log('Błąd rejestracji Service Workera:', err);
-    });
-  });
-}
+  aktualizujWidok();
 </script>
 
 </body>
