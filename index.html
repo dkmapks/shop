@@ -1,106 +1,276 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BranzoCoin Wallet</title>
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    body { font-family: sans-serif; max-width: 500px; margin: auto; padding: 20px; background: #111; color: #eee; }
-    h1 { text-align: center; }
-    .box { border: 1px solid #444; padding: 15px; margin: 15px 0; border-radius: 10px; background: #222; }
-    input, button, textarea { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; }
-    button { background: #00cc88; color: #000; font-weight: bold; cursor: pointer; }
-    #modMenu { display: none; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Symulator Handlu</title>
+<link rel="manifest" href="manifest.json" />
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 10px; }
+  input, button { margin: 5px 0; padding: 5px; font-size: 1rem; width: 100%; box-sizing: border-box; }
+  label { font-weight: bold; }
+  .slupek { border: 1px solid #ccc; padding: 8px; margin-bottom: 8px; }
+  .slupek input { width: 60px; margin-right: 5px; }
+  .slupek button { margin-left: 5px; }
+  #slupek-list { margin-top: 20px; }
+  #client-offer { background: #eee; padding: 10px; margin: 20px 0; border: 2px solid #333; }
+  #client-offer button { width: 48%; margin-right: 4%; }
+  #client-offer button:last-child { margin-right: 0; }
+</style>
 </head>
 <body>
 
-<h1>💰 BranzoCoin Wallet</h1>
-<div class="box">
-  <p><strong>Kurs BranzoCoin:</strong> <span id="kurs">0.01</span> zł / BRZ</p>
-  <p><strong>Twoje saldo:</strong> <span id="saldo">0</span> BRZ (~<span id="zl">0.00</span> zł)</p>
+<h1>Symulator Handlu</h1>
+
+<div>
+  <p><b>Gotówka:</b> <span id="cash">2500</span> zł</p>
+  <p><b>Towar u Ciebie:</b> <span id="stock">0</span> g</p>
 </div>
 
-<div class="box">
-  <h3>📥 Wpłata</h3>
-  <p>Przelej pieniądze na konto:<br><b>12 3456 7890 1234 5678 9012 3456</b></p>
-  <p>Po przelewie, wpisz kwotę:</p>
-  <input type="number" id="wplataKwota" placeholder="Kwota zł" />
-  <button onclick="dodajWplate()">Zatwierdź wpłatę</button>
+<div>
+  <label for="buy-amount">Ile gram chcesz kupić?</label>
+  <input type="number" id="buy-amount" min="1" />
+  <button id="buy-btn">Kup towar</button>
 </div>
 
-<div class="box">
-  <h3>📤 Wypłata</h3>
-  <textarea id="wplataDane" placeholder="Numer konta / dane do przelewu"></textarea>
-  <input type="number" id="wypKwota" placeholder="Kwota BRZ do wypłaty" />
-  <button onclick="wypisz()">Zatwierdź wypłatę</button>
+<h2>Słupy</h2>
+<div>
+  <label for="new-slupek-name">Dodaj słupa (imię):</label>
+  <input type="text" id="new-slupek-name" />
+  <button id="add-slupek-btn">Dodaj słupa</button>
 </div>
 
-<div class="box">
-  <h3>🔐 Mod Menu</h3>
-  <input type="text" id="kod" placeholder="Kod dostępu" />
-  <button onclick="odblokujModMenu()">Otwórz Mod Menu</button>
-  <div id="modMenu">
-    <input type="number" id="nowyKurs" placeholder="Nowy kurs (zł za 1 BRZ)" />
-    <button onclick="zmienKurs()">Zmień kurs</button>
-  </div>
+<div id="slupek-list"></div>
+
+<div id="client-offer" style="display:none;">
+  <p id="client-text"></p>
+  <button id="accept-client">Sprzedaj</button>
+  <button id="reject-client">Odrzuć</button>
 </div>
+
+<button id="save-btn">Zapisz grę</button>
+<button id="load-btn">Wczytaj grę</button>
 
 <script>
-  // Inicjalizacja
-  let kurs = parseFloat(localStorage.getItem("kurs")) || 0.01;
-  let saldo = parseFloat(localStorage.getItem("saldo")) || 0;
+(() => {
+  const cashEl = document.getElementById('cash');
+  const stockEl = document.getElementById('stock');
+  const buyAmountInput = document.getElementById('buy-amount');
+  const buyBtn = document.getElementById('buy-btn');
+  const slupekListEl = document.getElementById('slupek-list');
+  const addSlupekBtn = document.getElementById('add-slupek-btn');
+  const newSlupekNameInput = document.getElementById('new-slupek-name');
+  const saveBtn = document.getElementById('save-btn');
+  const loadBtn = document.getElementById('load-btn');
+  const clientOfferDiv = document.getElementById('client-offer');
+  const clientText = document.getElementById('client-text');
+  const acceptClientBtn = document.getElementById('accept-client');
+  const rejectClientBtn = document.getElementById('reject-client');
 
-  function aktualizujWidok() {
-    document.getElementById("kurs").textContent = kurs.toFixed(2);
-    document.getElementById("saldo").textContent = saldo.toFixed(0);
-    document.getElementById("zl").textContent = (saldo * kurs).toFixed(2);
-    localStorage.setItem("kurs", kurs);
-    localStorage.setItem("saldo", saldo);
-  }
+  const priceTable = [
+    { min: 10000, price: 7 },
+    { min: 5000, price: 10 },
+    { min: 2000, price: 13 },
+    { min: 1000, price: 15 },
+    { min: 500, price: 20 },
+    { min: 250, price: 21 },
+    { min: 200, price: 23 },
+    { min: 100, price: 25 },
+    { min: 90, price: 26 },
+    { min: 80, price: 27 },
+    { min: 70, price: 28 },
+    { min: 60, price: 30 },
+    { min: 50, price: 32 },
+    { min: 40, price: 34 },
+    { min: 30, price: 36 },
+    { min: 20, price: 38 },
+    { min: 10, price: 40 },
+    { min: 5, price: 45 },
+    { min: 1, price: 50 }
+  ];
 
-  function dodajWplate() {
-    let kwota = parseFloat(document.getElementById("wplataKwota").value);
-    if (kwota > 0) {
-      let ileBRZ = kwota / kurs;
-      saldo += ileBRZ;
-      alert(`Dodano ${ileBRZ.toFixed(0)} BRZ do konta`);
-      aktualizujWidok();
+  let state = {
+    cash: 2500,
+    stock: 0,
+    sluupy: []
+  };
+
+  function getPriceForAmount(amount) {
+    for (let i = 0; i < priceTable.length; i++) {
+      if (amount >= priceTable[i].min) return priceTable[i].price;
     }
+    return 50;
   }
 
-  function wypisz() {
-    let dane = document.getElementById("wplataDane").value;
-    let kwota = parseFloat(document.getElementById("wypKwota").value);
-    if (kwota > 0 && kwota <= saldo && dane.length > 5) {
-      saldo -= kwota;
-      alert(`Zlecono wypłatę ${kwota.toFixed(0)} BRZ.\nDane:\n${dane}`);
-      aktualizujWidok();
+  function updateUI() {
+    cashEl.textContent = state.cash.toFixed(2);
+    stockEl.textContent = state.stock.toFixed(2);
+    renderSluppy();
+  }
+
+  function renderSluppy() {
+    slupekListEl.innerHTML = '';
+    state.sluupy.forEach((s, idx) => {
+      const div = document.createElement('div');
+      div.className = 'slupek';
+      div.innerHTML = `
+        <b>${s.name}</b><br/>
+        Towar u słupa: ${s.stock.toFixed(2)} g<br/>
+        Oddaje (zł/g): <input type="number" min="0" max="50" step="0.01" value="${s.cut}" data-idx="${idx}" class="cut-input"/>
+        Ilość towaru do przekazania (g): <input type="number" min="0" step="0.01" value="0" data-idx="${idx}" class="give-amount"/>
+        <button data-idx="${idx}" class="give-btn">Przekaż towar</button>
+        <button data-idx="${idx}" class="sell-btn">Sprzedaj towar słupowi</button>
+        <button data-idx="${idx}" class="del-btn" style="float:right;color:red;">Usuń</button>
+      `;
+      slupekListEl.appendChild(div);
+    });
+
+    slupekListEl.querySelectorAll('.cut-input').forEach(input => {
+      input.onchange = e => {
+        const i = +e.target.dataset.idx;
+        let val = parseFloat(e.target.value);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > 50) val = 50;
+        state.sluupy[i].cut = val;
+        e.target.value = val.toFixed(2);
+      };
+    });
+    slupekListEl.querySelectorAll('.give-btn').forEach(btn => {
+      btn.onclick = e => {
+        const i = +e.target.dataset.idx;
+        const input = slupekListEl.querySelector(`.give-amount[data-idx="${i}"]`);
+        let giveAmount = parseFloat(input.value);
+        if (isNaN(giveAmount) || giveAmount <= 0) {
+          alert('Podaj poprawną ilość do przekazania');
+          return;
+        }
+        if (giveAmount > state.stock) {
+          alert('Nie masz tyle towaru');
+          return;
+        }
+        state.stock -= giveAmount;
+        state.sluupy[i].stock += giveAmount;
+        input.value = '0';
+        updateUI();
+      };
+    });
+    slupekListEl.querySelectorAll('.sell-btn').forEach(btn => {
+      btn.onclick = e => {
+        const i = +e.target.dataset.idx;
+        const slupek = state.sluupy[i];
+        if (slupek.stock <= 0) {
+          alert('Słup nie ma towaru do sprzedaży');
+          return;
+        }
+        const gramPrice = 50;
+        const cut = slupek.cut;
+        const profit = (gramPrice - cut) * slupek.stock;
+        state.cash += profit;
+        slupek.stock = 0;
+        updateUI();
+      };
+    });
+    slupekListEl.querySelectorAll('.del-btn').forEach(btn => {
+      btn.onclick = e => {
+        const i = +e.target.dataset.idx;
+        if(confirm(`Usunąć słupa ${state.sluupy[i].name}?`)){
+          state.stock += state.sluupy[i].stock;
+          state.sluupy.splice(i, 1);
+          updateUI();
+        }
+      };
+    });
+  }
+
+  buyBtn.onclick = () => {
+    let amount = parseFloat(buyAmountInput.value);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Podaj poprawną ilość gram');
+      return;
+    }
+    const price = getPriceForAmount(amount);
+    const cost = price * amount;
+    if (cost > state.cash) {
+      alert(`Nie masz tyle pieniędzy. Potrzebujesz ${cost.toFixed(2)} zł.`);
+      return;
+    }
+    state.cash -= cost;
+    state.stock += amount;
+    buyAmountInput.value = '';
+    updateUI();
+  };
+
+  addSlupekBtn.onclick = () => {
+    const name = newSlupekNameInput.value.trim();
+    if (!name) {
+      alert('Podaj imię słupa');
+      return;
+    }
+    state.sluupy.push({ name, stock: 0, cut: 10 });
+    newSlupekNameInput.value = '';
+    updateUI();
+  };
+
+  saveBtn.onclick = () => {
+    localStorage.setItem('simGameState', JSON.stringify(state));
+    alert('Stan gry zapisany.');
+  };
+
+  loadBtn.onclick = () => {
+    const saved = localStorage.getItem('simGameState');
+    if (saved) {
+      state = JSON.parse(saved);
+      updateUI();
+      alert('Stan gry wczytany.');
     } else {
-      alert("Błąd: za mało środków lub brak danych.");
+      alert('Brak zapisanego stanu.');
     }
+  };
+
+  // --- Obsługa klientów ---
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  function odblokujModMenu() {
-    const kod = document.getElementById("kod").value;
-    if (kod === "74320101") {
-      document.getElementById("modMenu").style.display = "block";
-    } else {
-      alert("Niepoprawny kod");
+  // Klient losowy - kupuje od 1 do 40 gram albo VIP 250g co jakiś czas
+  function getRandomClientOffer() {
+    const vipChance = 0.1; // 10% szansy na VIPa
+    if (Math.random() < vipChance) {
+      return { amount: 250, vip: true };
     }
+    const amount = randomInt(1, 40);
+    return { amount, vip: false };
   }
 
-  function zmienKurs() {
-    let nowy = parseFloat(document.getElementById("nowyKurs").value);
-    if (nowy > 0) {
-      kurs = nowy;
-      aktualizujWidok();
-      alert("Kurs zmieniony");
-    }
+  function showClientOffer() {
+    if(clientOfferDiv.style.display === 'block') return; // nie pokazuj jeśli już jest
+
+    const offer = getRandomClientOffer();
+    const price = 50; // cena sprzedaży
+    clientText.textContent = `Klient chce kupić ${offer.amount} g towaru${offer.vip ? ' (VIP)' : ''} za ${ (offer.amount * price).toFixed(2)} zł. Sprzedajesz?`;
+    clientOfferDiv.style.display = 'block';
+
+    acceptClientBtn.onclick = () => {
+      if(state.stock < offer.amount) {
+        alert('Nie masz tyle towaru!');
+        clientOfferDiv.style.display = 'none';
+        return;
+      }
+      state.stock -= offer.amount;
+      state.cash += offer.amount * price;
+      clientOfferDiv.style.display = 'none';
+      updateUI();
+    };
+    rejectClientBtn.onclick = () => {
+      clientOfferDiv.style.display = 'none';
+    };
   }
 
-  aktualizujWidok();
+  // Co 10 sekund losowy klient
+  setInterval(showClientOffer, 10000);
+
+  updateUI();
+})();
 </script>
 
 </body>
