@@ -3,282 +3,228 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Symulator Handlu</title>
-<link rel="manifest" href="manifest.json" />
+<title>Symulator handlu</title>
 <style>
-  body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 10px; }
-  input, button { margin: 5px 0; padding: 5px; font-size: 1rem; width: 100%; box-sizing: border-box; }
-  label { font-weight: bold; }
-  .slupek { border: 1px solid #ccc; padding: 8px; margin-bottom: 8px; }
-  .slupek input { width: 60px; margin-right: 5px; }
-  .slupek button { margin-left: 5px; }
-  #slupek-list { margin-top: 20px; }
-  #client-offer { background: #eee; padding: 10px; margin: 20px 0; border: 2px solid #333; }
-  #client-offer button { width: 48%; margin-right: 4%; }
-  #client-offer button:last-child { margin-right: 0; }
+  body { font-family: Arial, sans-serif; background: #222; color: #eee; padding: 20px; }
+  input, button { padding: 5px; margin: 5px; }
+  .vip { color: gold; font-weight: bold; }
+  #log { background: #333; height: 150px; overflow-y: auto; padding: 10px; margin-top: 10px; }
 </style>
 </head>
 <body>
 
-<h1>Symulator Handlu</h1>
+<h1>Symulator handlu</h1>
 
-<div>
-  <p><b>Gotówka:</b> <span id="cash">2500</span> zł</p>
-  <p><b>Towar u Ciebie:</b> <span id="stock">0</span> g</p>
-</div>
+<p>Gotówka: <span id="money">2500</span> zł</p>
+<p>Towar: <span id="stock">0</span> g</p>
+<p>Dług do spłaty: <span id="debt">0</span> zł</p>
 
-<div>
-  <label for="buy-amount">Ile gram chcesz kupić?</label>
-  <input type="number" id="buy-amount" min="1" />
-  <button id="buy-btn">Kup towar</button>
-</div>
+<h3>Pożycz pieniądze (oddajesz 3x więcej!)</h3>
+<input type="number" id="loanAmount" placeholder="Kwota do pożyczenia" />
+<button onclick="takeLoan()">Pożycz</button>
 
-<h2>Słupy</h2>
-<div>
-  <label for="new-slupek-name">Dodaj słupa (imię):</label>
-  <input type="text" id="new-slupek-name" />
-  <button id="add-slupek-btn">Dodaj słupa</button>
-</div>
+<h3>Ręczny zakup</h3>
+<input type="number" id="buyAmount" placeholder="Ilość gram" />
+<input type="number" id="buyPrice" placeholder="Cena za gram" />
+<button onclick="manualBuy()">Kup</button>
 
-<div id="slupek-list"></div>
+<h3>Ręczna sprzedaż</h3>
+<input type="number" id="sellAmount" placeholder="Ilość gram" />
+<input type="number" id="sellPrice" placeholder="Cena za gram" />
+<button onclick="manualSell()">Sprzedaj</button>
 
-<div id="client-offer" style="display:none;">
-  <p id="client-text"></p>
-  <button id="accept-client">Sprzedaj</button>
-  <button id="reject-client">Odrzuć</button>
-</div>
+<h3>Rzucanie towarem (50% szans na sprzedaż)</h3>
+<input type="number" id="throwAmount" placeholder="Ilość gram" />
+<input type="number" id="throwPrice" placeholder="Cena za gram" />
+<button onclick="throwStock()">Rzuć towar</button>
 
-<button id="save-btn">Zapisz grę</button>
-<button id="load-btn">Wczytaj grę</button>
+<h3>Słupy - ich ceny do oddania</h3>
+<ul id="slupyList"></ul>
+
+<h3>Losowi klienci</h3>
+<button onclick="showClients()">Pokaż klientów</button>
+<ul id="clientsList"></ul>
+
+<h3>Oferta hurtowni (co 30 sekund)</h3>
+<p id="hurtowniaOffer">Brak oferty</p>
+<button onclick="buyFromHurtownia()">Kup hurtowo</button>
+
+<h3>Log</h3>
+<div id="log"></div>
 
 <script>
-(() => {
-  const cashEl = document.getElementById('cash');
-  const stockEl = document.getElementById('stock');
-  const buyAmountInput = document.getElementById('buy-amount');
-  const buyBtn = document.getElementById('buy-btn');
-  const slupekListEl = document.getElementById('slupek-list');
-  const addSlupekBtn = document.getElementById('add-slupek-btn');
-  const newSlupekNameInput = document.getElementById('new-slupek-name');
-  const saveBtn = document.getElementById('save-btn');
-  const loadBtn = document.getElementById('load-btn');
-  const clientOfferDiv = document.getElementById('client-offer');
-  const clientText = document.getElementById('client-text');
-  const acceptClientBtn = document.getElementById('accept-client');
-  const rejectClientBtn = document.getElementById('reject-client');
+let playerMoney = 2500;
+let playerStock = 0;
+let debt = 0;
 
-  const priceTable = [
-    { min: 10000, price: 7 },
-    { min: 5000, price: 10 },
-    { min: 2000, price: 13 },
-    { min: 1000, price: 15 },
-    { min: 500, price: 20 },
-    { min: 250, price: 21 },
-    { min: 200, price: 23 },
-    { min: 100, price: 25 },
-    { min: 90, price: 26 },
-    { min: 80, price: 27 },
-    { min: 70, price: 28 },
-    { min: 60, price: 30 },
-    { min: 50, price: 32 },
-    { min: 40, price: 34 },
-    { min: 30, price: 36 },
-    { min: 20, price: 38 },
-    { min: 10, price: 40 },
-    { min: 5, price: 45 },
-    { min: 1, price: 50 }
-  ];
+let slupy = [
+  { name: 'Słup1', pricePerGram: 30 },
+  { name: 'Słup2', pricePerGram: 28 },
+];
 
-  let state = {
-    cash: 2500,
-    stock: 0,
-    sluupy: []
-  };
+let currentHurtOffer = null;
 
-  function getPriceForAmount(amount) {
-    for (let i = 0; i < priceTable.length; i++) {
-      if (amount >= priceTable[i].min) return priceTable[i].price;
-    }
-    return 50;
+function log(msg) {
+  const logDiv = document.getElementById('log');
+  logDiv.innerHTML = msg + '<br>' + logDiv.innerHTML;
+}
+
+function updateUI() {
+  document.getElementById('money').innerText = playerMoney.toFixed(2);
+  document.getElementById('stock').innerText = playerStock.toFixed(2);
+  document.getElementById('debt').innerText = debt.toFixed(2);
+
+  // Aktualizacja słupów
+  let slupyList = document.getElementById('slupyList');
+  slupyList.innerHTML = '';
+  slupyOffers().forEach(s => {
+    let li = document.createElement('li');
+    li.innerText = `${s.name} proponuje oddać ${s.price} zł/g`;
+    slupyList.appendChild(li);
+  });
+}
+
+function takeLoan() {
+  let amount = parseFloat(document.getElementById('loanAmount').value);
+  if (isNaN(amount) || amount <= 0) {
+    alert('Wpisz poprawną kwotę');
+    return;
   }
-
-  function updateUI() {
-    cashEl.textContent = state.cash.toFixed(2);
-    stockEl.textContent = state.stock.toFixed(2);
-    renderSluppy();
-  }
-
-  function renderSluppy() {
-    slupekListEl.innerHTML = '';
-    state.sluupy.forEach((s, idx) => {
-      const div = document.createElement('div');
-      div.className = 'slupek';
-      div.innerHTML = `
-        <b>${s.name}</b><br/>
-        Towar u słupa: ${s.stock.toFixed(2)} g<br/>
-        Oddaje (zł/g): <input type="number" min="0" max="50" step="0.01" value="${s.cut}" data-idx="${idx}" class="cut-input"/>
-        Ilość towaru do przekazania (g): <input type="number" min="0" step="0.01" value="0" data-idx="${idx}" class="give-amount"/>
-        <button data-idx="${idx}" class="give-btn">Przekaż towar</button>
-        <button data-idx="${idx}" class="sell-btn">Sprzedaj towar słupowi</button>
-        <button data-idx="${idx}" class="del-btn" style="float:right;color:red;">Usuń</button>
-      `;
-      slupekListEl.appendChild(div);
-    });
-
-    slupekListEl.querySelectorAll('.cut-input').forEach(input => {
-      input.onchange = e => {
-        const i = +e.target.dataset.idx;
-        let val = parseFloat(e.target.value);
-        if (isNaN(val) || val < 0) val = 0;
-        if (val > 50) val = 50;
-        state.sluupy[i].cut = val;
-        e.target.value = val.toFixed(2);
-      };
-    });
-    slupekListEl.querySelectorAll('.give-btn').forEach(btn => {
-      btn.onclick = e => {
-        const i = +e.target.dataset.idx;
-        const input = slupekListEl.querySelector(`.give-amount[data-idx="${i}"]`);
-        let giveAmount = parseFloat(input.value);
-        if (isNaN(giveAmount) || giveAmount <= 0) {
-          alert('Podaj poprawną ilość do przekazania');
-          return;
-        }
-        if (giveAmount > state.stock) {
-          alert('Nie masz tyle towaru');
-          return;
-        }
-        state.stock -= giveAmount;
-        state.sluupy[i].stock += giveAmount;
-        input.value = '0';
-        updateUI();
-      };
-    });
-    slupekListEl.querySelectorAll('.sell-btn').forEach(btn => {
-      btn.onclick = e => {
-        const i = +e.target.dataset.idx;
-        const slupek = state.sluupy[i];
-        if (slupek.stock <= 0) {
-          alert('Słup nie ma towaru do sprzedaży');
-          return;
-        }
-        const gramPrice = 50;
-        const cut = slupek.cut;
-        const profit = (gramPrice - cut) * slupek.stock;
-        state.cash += profit;
-        slupek.stock = 0;
-        updateUI();
-      };
-    });
-    slupekListEl.querySelectorAll('.del-btn').forEach(btn => {
-      btn.onclick = e => {
-        const i = +e.target.dataset.idx;
-        if(confirm(`Usunąć słupa ${state.sluupy[i].name}?`)){
-          state.stock += state.sluupy[i].stock;
-          state.sluupy.splice(i, 1);
-          updateUI();
-        }
-      };
-    });
-  }
-
-  buyBtn.onclick = () => {
-    let amount = parseFloat(buyAmountInput.value);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Podaj poprawną ilość gram');
-      return;
-    }
-    const price = getPriceForAmount(amount);
-    const cost = price * amount;
-    if (cost > state.cash) {
-      alert(`Nie masz tyle pieniędzy. Potrzebujesz ${cost.toFixed(2)} zł.`);
-      return;
-    }
-    state.cash -= cost;
-    state.stock += amount;
-    buyAmountInput.value = '';
-    updateUI();
-  };
-
-  addSlupekBtn.onclick = () => {
-    const name = newSlupekNameInput.value.trim();
-    if (!name) {
-      alert('Podaj imię słupa');
-      return;
-    }
-    state.sluupy.push({ name, stock: 0, cut: 10 });
-    newSlupekNameInput.value = '';
-    updateUI();
-  };
-
-  saveBtn.onclick = () => {
-    localStorage.setItem('simGameState', JSON.stringify(state));
-    alert('Stan gry zapisany.');
-  };
-
-  loadBtn.onclick = () => {
-    const saved = localStorage.getItem('simGameState');
-    if (saved) {
-      state = JSON.parse(saved);
-      updateUI();
-      alert('Stan gry wczytany.');
-    } else {
-      alert('Brak zapisanego stanu.');
-    }
-  };
-
-  // --- Obsługa klientów ---
-  function randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  }
-
-  // Klient losowy - kupuje od 1 do 40 gram albo VIP 250g co jakiś czas
-  function getRandomClientOffer() {
-    const vipChance = 0.1; // 10% szansy na VIPa
-    if (Math.random() < vipChance) {
-      return { amount: 250, vip: true };
-    }
-    const amount = randomInt(1, 40);
-    return { amount, vip: false };
-  }
-
-  function showClientOffer() {
-    if(clientOfferDiv.style.display === 'block') return; // nie pokazuj jeśli już jest
-
-    const offer = getRandomClientOffer();
-    const price = 50; // cena sprzedaży
-    clientText.textContent = `Klient chce kupić ${offer.amount} g towaru${offer.vip ? ' (VIP)' : ''} za ${ (offer.amount * price).toFixed(2)} zł. Sprzedajesz?`;
-    clientOfferDiv.style.display = 'block';
-
-    acceptClientBtn.onclick = () => {
-      if(state.stock < offer.amount) {
-        alert('Nie masz tyle towaru!');
-        clientOfferDiv.style.display = 'none';
-        return;
-      }
-      state.stock -= offer.amount;
-      state.cash += offer.amount * price;
-      clientOfferDiv.style.display = 'none';
-      updateUI();
-    };
-    rejectClientBtn.onclick = () => {
-      clientOfferDiv.style.display = 'none';
-    };
-  }
-
-  // Co 10 sekund losowy klient
-  setInterval(showClientOffer, 10000);
-
+  playerMoney += amount;
+  debt += amount * 3;
+  log(`Pożyczono ${amount.toFixed(2)} zł. Do oddania: ${debt.toFixed(2)} zł`);
   updateUI();
-})();
-</script>
+}
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log('Service Worker zarejestrowany'))
-      .catch(err => console.error('Błąd rejestracji SW:', err));
+function manualBuy() {
+  let amount = parseFloat(document.getElementById('buyAmount').value);
+  let price = parseFloat(document.getElementById('buyPrice').value);
+  if (isNaN(amount) || amount <= 0 || isNaN(price) || price <= 0) {
+    alert('Wpisz poprawne dane');
+    return;
   }
+  let total = amount * price;
+  if (total > playerMoney) {
+    alert('Nie masz tyle pieniędzy');
+    return;
+  }
+  playerStock += amount;
+  playerMoney -= total;
+  log(`Kupiono ${amount.toFixed(2)} g po ${price.toFixed(2)} zł/g (wydano ${total.toFixed(2)} zł)`);
+  updateUI();
+}
+
+function manualSell() {
+  let amount = parseFloat(document.getElementById('sellAmount').value);
+  let price = parseFloat(document.getElementById('sellPrice').value);
+  if (isNaN(amount) || amount <= 0 || isNaN(price) || price <= 0) {
+    alert('Wpisz poprawne dane');
+    return;
+  }
+  if (amount > playerStock) {
+    alert('Nie masz tyle towaru');
+    return;
+  }
+  let total = amount * price;
+  playerStock -= amount;
+  playerMoney += total;
+  log(`Sprzedano ${amount.toFixed(2)} g po ${price.toFixed(2)} zł/g (zarobiono ${total.toFixed(2)} zł)`);
+  updateUI();
+}
+
+function throwStock() {
+  let amount = parseFloat(document.getElementById('throwAmount').value);
+  let price = parseFloat(document.getElementById('throwPrice').value);
+  if (isNaN(amount) || amount <= 0 || isNaN(price) || price <= 0) {
+    alert('Wpisz poprawne dane');
+    return;
+  }
+  if (amount > playerStock) {
+    alert('Nie masz tyle towaru');
+    return;
+  }
+  if (Math.random() < 0.5) {
+    let total = amount * price;
+    playerStock -= amount;
+    playerMoney += total;
+    log(`Rzucono ${amount.toFixed(2)} g po ${price.toFixed(2)} zł/g i sprzedano za ${total.toFixed(2)} zł`);
+  } else {
+    log('Nikt nie kupił rzuconego towaru.');
+  }
+  updateUI();
+}
+
+function slupyOffers() {
+  return slupy.map(s => {
+    let offer = s.pricePerGram + (Math.random() * 4 - 2);
+    offer = Math.max(5, Math.round(offer));
+    return { name: s.name, price: offer };
+  });
+}
+
+function randomClients() {
+  let clients = [];
+  let clientCount = Math.floor(Math.random() * 5) + 1;
+  for (let i = 0; i < clientCount; i++) {
+    let amount = Math.floor(Math.random() * 50) + 1;
+    let price = Math.floor(Math.random() * 26) + 25;
+    clients.push({ amount, price, vip: false });
+  }
+  if (Math.random() < 0.2) {
+    clients.push({
+      amount: Math.floor(Math.random() * 101) + 200,
+      price: Math.floor(Math.random() * 11) + 30,
+      vip: true,
+    });
+  }
+  return clients;
+}
+
+function showClients() {
+  let clientsList = document.getElementById('clientsList');
+  clientsList.innerHTML = '';
+  let clients = randomClients();
+  clients.forEach((c, i) => {
+    let li = document.createElement('li');
+    li.innerHTML = `Klient ${i + 1}: ${c.amount} g, cena ${c.price} zł/g` + (c.vip ? ' <span class="vip">VIP</span>' : '');
+    clientsList.appendChild(li);
+  });
+  log(`Wygenerowano ${clients.length} klientów`);
+}
+
+function hurtowniaOffer() {
+  let amount = Math.floor(Math.random() * 4901) + 100;
+  let price = Math.floor(Math.random() * 8) + 7;
+  currentHurtOffer = { amount, price };
+  document.getElementById('hurtowniaOffer').innerText = `Hurtownia oferuje ${amount} g po ${price} zł/g`;
+  log(`Nowa oferta hurtowni: ${amount} g po ${price} zł/g`);
+}
+
+function buyFromHurtownia() {
+  if (!currentHurtOffer) {
+    alert('Brak oferty hurtowni');
+    return;
+  }
+  let total = currentHurtOffer.amount * currentHurtOffer.price;
+  if (playerMoney < total) {
+    alert('Nie masz tyle pieniędzy!');
+    return;
+  }
+  playerStock += currentHurtOffer.amount;
+  playerMoney -= total;
+  log(`Kupiono od hurtowni ${currentHurtOffer.amount} g po ${currentHurtOffer.price} zł/g (wydano ${total.toFixed(2)} zł)`);
+  currentHurtOffer = null;
+  document.getElementById('hurtowniaOffer').innerText = 'Brak oferty';
+  updateUI();
+}
+
+// Oferta hurtowni co 30 sekund
+setInterval(hurtowniaOffer, 30000);
+
+// Aktualizacja UI co sekundę (ceny słupów)
+setInterval(updateUI, 1000);
+
+updateUI();
 </script>
 
 </body>
